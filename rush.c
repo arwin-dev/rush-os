@@ -9,7 +9,7 @@
 #define TOK_DELIM " \t\n"
 
 void printErrorMessage() {
-    char error_message[] = "An error has occurred\n";
+    char error_message[30] = "An error has occurred\n";
     write(STDERR_FILENO, error_message, strlen(error_message));
     fflush(stderr);
 }
@@ -135,7 +135,13 @@ char **generatePath(char **args1) {
     return path;
 }
 
-int main() {
+int main(int argc, char *argv[]) 
+{
+    if(argc > 1)
+    {
+        printErrorMessage();
+        return EXIT_FAILURE;
+    }
     char *input;
     char **args;
     char *initialPath[2];
