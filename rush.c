@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <fcntl.h> 
 
 #define TOK_BUFSIZE 64
 #define TOK_DELIM " \t\n"
@@ -80,6 +81,26 @@ void rushExecute(char **args, char **path)
             pid = fork();
             if(pid == 0)
             {
+                int redir_index = -1;
+                for (int i = 0; args[i] != NULL; i++) {
+                    if (strcmp(args[i], ">") == 0) {
+                        redir_index = i;
+                        break;
+                    }
+                }
+
+                if (redir_index != -1 && args[redir_index + 1] != NULL) {
+                    int file_desc = open(args[redir_index + 1], 1 | 512 | 64, 0644);
+                    if (file_desc == -1) {
+                        printErrorMessage();
+                        exit(EXIT_FAILURE);
+                    }
+                    dup2(file_desc, STDOUT_FILENO);
+                    close(file_desc);
+                    args[redir_index] = NULL;
+                    args[redir_index + 1] = NULL;
+                }
+
                 if(execvp(args[0], args) == -1){
                     printErrorMessage();
                 }
@@ -123,8 +144,8 @@ int main() {
 
     char **path = initialPath;
 
-    for(int j = 0; path[j] != NULL; j++)
-        printf("%s\n", path[j]);
+    // for(int j = 0; path[j] != NULL; j++)
+    //     printf("%s\n", path[j]);
 
     while (1) {
         printf("rush> ");
