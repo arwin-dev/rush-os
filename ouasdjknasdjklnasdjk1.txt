@@ -1,0 +1,10 @@
+asdasdasd.txt
+makefile
+ouasdjknasdjklnasdjk1.txt
+out.txt
+out1.txt
+out2.txt
+output.txt
+output213123.txt
+rush
+rush.c

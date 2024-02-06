@@ -1,0 +1,4 @@
+makefile
+out.txt
+rush
+rush.c
