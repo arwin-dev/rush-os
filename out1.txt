@@ -1,5 +1,0 @@
-makefile
-out.txt
-out1.txt
-rush
-rush.c

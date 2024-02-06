@@ -143,7 +143,7 @@ void rushExecute(char **args, char **path)
                     if (strcmp(args[i], ">") == 0) {
                         redir_count++;
                         redir_index = i;
-                        if (redir_count > 1 || args[i+2] != NULL) {
+                        if (redir_count > 1 || args[i+1] == NULL ||args[i+2] != NULL ) {
                             printErrorMessage();
                             exit(EXIT_FAILURE);
                         }
