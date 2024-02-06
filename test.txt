@@ -1,4 +1,0 @@
-echo Hello World
-echo Hello World > /tmp/tmp.txt
-echo Hello World > /tmp/tmp.txt > /tmp/tmp.txt
-echo Hello World

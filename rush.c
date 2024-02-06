@@ -77,15 +77,20 @@ void rushExecute(char **args, char **path)
         {
             pid_t pid;
             int status;
-
+ 
             pid = fork();
             if(pid == 0)
             {
+                int redir_count = 0;
                 int redir_index = -1;
                 for (int i = 0; args[i] != NULL; i++) {
                     if (strcmp(args[i], ">") == 0) {
+                        redir_count++;
                         redir_index = i;
-                        break;
+                        if (redir_count > 1) {
+                            printErrorMessage();
+                            exit(EXIT_FAILURE);
+                        }
                     }
                 }
 
@@ -142,6 +147,7 @@ int main(int argc, char *argv[])
         printErrorMessage();
         return EXIT_FAILURE;
     }
+    
     char *input;
     char **args;
     char *initialPath[2];
@@ -173,8 +179,9 @@ int main(int argc, char *argv[])
             path = generatePath(args);
         }else {
             if(path[0] == NULL)
+            {
                 continue;
-                
+            }
             rushExecute(args, path);
         }
 
