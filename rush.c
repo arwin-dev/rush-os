@@ -181,6 +181,10 @@ void rushExecute(char **args, char **path)
 
 void rushExecuteASDASD(char **args, char **path)
 {
+
+    for(int j = 0; args[j] != NULL; j++)
+        printf("%s\n", args[j]);
+
     int num_commands = 0;
     char *commands[64];
 
@@ -193,7 +197,12 @@ void rushExecuteASDASD(char **args, char **path)
         if (strcmp(args[i], "&") == 0)
         {
             args[i] = NULL;                          
-            commands[num_commands++] = args[i + 1]; 
+            if (args[i + 1] != NULL) {
+                commands[num_commands++] = args[i + 1]; // Include next token as command
+            }
+        }
+        else {
+            commands[num_commands++] = args[i]; // Include current token as command
         }
     }
     commands[num_commands++] = NULL; 
