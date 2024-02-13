@@ -26,18 +26,18 @@ char *rushReadLine() {
     return input;
 }
 
-char **rushSplitLine(char *input) {
+char **rushSplitLine(char *input, char *delim) {
     int bufSize = TOK_BUFSIZE;
     int i = 0;
     char **tokens = malloc(bufSize * sizeof(char *));
-    char *token;
+    char *token=NULL;
 
     if (!tokens) {
         printErrorMessage();
         exit(EXIT_FAILURE);
     }
 
-    token = strtok(input, TOK_DELIM);
+    token = strtok(input, delim);
     while (token != NULL) {
         tokens[i] = strdup(token);
         i++;
@@ -49,7 +49,7 @@ char **rushSplitLine(char *input) {
                 exit(EXIT_FAILURE);
             }
         }
-        token = strtok(NULL, TOK_DELIM);
+        token = strtok(NULL, delim);
     }
     tokens[i] = NULL;
     return tokens;
@@ -191,72 +191,6 @@ void rushExecute(char **args, char **path)
             return;
         }
     }
-
-    // for(int j = 0; path[j] != NULL; j++)
-    // {   
-    //     size_t full_path_len = strlen(path[j]) + strlen("/") + strlen(args[0]) + 1;
-    //     char *full_path = (char *)malloc(full_path_len * sizeof(char));
-    //     if (full_path == NULL) {
-    //         printErrorMessage();
-    //         return;
-    //     }
-
-    //     strcpy(full_path, path[j]);
-    //     strcat(full_path, "/");
-    //     strcat(full_path, args[0]);
-    //     int fd = access(full_path, X_OK);
-    //     if (fd == -1) {
-    //         printErrorMessage();
-    //     }
-    //     else
-    //     {
-    //         pid_t pid;
-    //         int status;
- 
-    //         pid = fork();
-    //         if(pid == 0)
-    //         {
-    //             int redir_count = 0;
-    //             int redir_index = -1;
-    //             for (int i = 0; args[i] != NULL; i++) {
-    //                 if (strcmp(args[i], ">") == 0) {
-    //                     redir_count++;
-    //                     redir_index = i;
-    //                     if (redir_count > 1 || args[i+1] == NULL ||args[i+2] != NULL ) {
-    //                         printErrorMessage();
-    //                         exit(EXIT_FAILURE);
-    //                     }
-    //                 }
-    //             }
-
-    //             if (redir_index != -1 && args[redir_index + 1] != NULL) {
-    //                 int file_desc = open(args[redir_index + 1], 1 | 512 | 64, 0644);
-    //                 if (file_desc == -1) {
-    //                     printErrorMessage();
-    //                     exit(EXIT_FAILURE);
-    //                 }
-    //                 dup2(file_desc, STDOUT_FILENO);
-    //                 close(file_desc);
-    //                 args[redir_index] = NULL;
-    //                 args[redir_index + 1] = NULL;
-    //             }
-
-    //             if(execvp(full_path, args) == -1){
-    //                 printErrorMessage();
-    //             }
-    //         }
-    //         else if (pid < 0)
-    //         {
-    //             printErrorMessage();
-    //         }
-    //         else
-    //         {
-    //             wait(&status);
-    //             return;
-    //         }
-    //     }
-    //     free(full_path);
-    // }
 }
 
 void rushExecuteASDASD(char **args, char **path)
@@ -298,7 +232,7 @@ void rushExecuteASDASD(char **args, char **path)
         }
         else if (pid == 0)
         {
-            rushExecuteSingleCommand(rushSplitLine(commands[i]), path);
+            rushExecuteSingleCommand(rushSplitLine(commands[i], TOK_DELIM), path);
             exit(EXIT_FAILURE);
         }
         else
@@ -356,29 +290,43 @@ int main(int argc, char *argv[])
         fflush(stdout);
 
         input = rushReadLine();
-        args = rushSplitLine(input);
+        args = rushSplitLine(input, "&");
 
-        if(args[0] == NULL){
-            continue;
-        }
-        if (strcmp(args[0], "exit") == 0) {
-            if(args[1] == NULL)
-                exit(1);
-            else
-                printErrorMessage();
-        } else if (strcmp(args[0], "cd") == 0) {
-            if (chdir(args[1]) != 0) {
-                printErrorMessage();
-            }
-        } else if (strcmp(args[0], "path") == 0) {
-            path = generatePath(args);
-        }else {
-            if(path[0] == NULL)
+        for(int i = 0; args[i] != NULL; i++)
+        {
+            char **parall=NULL;
+            parall = rushSplitLine(args[i], TOK_DELIM);
+
+            if(parall[0] == NULL)
             {
-                printErrorMessage();
                 continue;
             }
-            rushExecute(args, path);
+            if (strcmp(parall[0], "exit") == 0) 
+            {
+                if(parall[1] == NULL)
+                    exit(1);
+                else
+                    printErrorMessage();
+            } 
+            else if (strcmp(parall[0], "cd") == 0) 
+            {
+                if (chdir(parall[1]) != 0) {
+                    printErrorMessage();
+                }
+            } 
+            else if (strcmp(parall[0], "path") == 0) 
+            {
+                path = generatePath(parall);
+            }
+            else
+            {
+                if(path[0] == NULL)
+                {
+                    printErrorMessage();
+                    continue;
+                }
+                rushExecute(parall, path);
+            }
         }
 
         free(input);
