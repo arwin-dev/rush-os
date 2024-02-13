@@ -113,70 +113,150 @@ void rushExecuteSingleCommand(char **args, char **path)
 
 void rushExecute(char **args, char **path)
 {
+    int success = 0;
+    size_t final_full_path_len = 0; 
+    char *final_full_path = NULL;
     for(int j = 0; path[j] != NULL; j++)
-    {   
+    {
         size_t full_path_len = strlen(path[j]) + strlen("/") + strlen(args[0]) + 1;
         char *full_path = (char *)malloc(full_path_len * sizeof(char));
-        if (full_path == NULL) {
-            printErrorMessage();
-            return;
+        if (full_path == NULL) 
+        {
+            continue;
         }
 
         strcpy(full_path, path[j]);
         strcat(full_path, "/");
         strcat(full_path, args[0]);
-        int fd = access(full_path, X_OK);
-        if (fd == -1) {
+        int checkIfFileExists = access(full_path, X_OK);
+        if(checkIfFileExists == 0)
+        {
+            success = 1;
+            if(final_full_path != NULL) free(final_full_path);
+            final_full_path = (char *)malloc(full_path_len * sizeof(char));
+            strcpy(final_full_path, full_path);
+            break;
+        }
+    }
+
+    if(success == 0)
+    {
+        printErrorMessage();
+        return;
+    }
+    else
+    {
+        pid_t pid;
+        int status;
+
+        pid = fork();
+        if(pid == 0)
+        {
+            int redir_count = 0;
+            int redir_index = -1;
+            for (int i = 0; args[i] != NULL; i++) {
+                if (strcmp(args[i], ">") == 0) {
+                    redir_count++;
+                    redir_index = i;
+                    if (redir_count > 1 || args[i+1] == NULL ||args[i+2] != NULL ) {
+                        printErrorMessage();
+                        exit(EXIT_FAILURE);
+                    }
+                }
+            }
+
+            if (redir_index != -1 && args[redir_index + 1] != NULL) {
+                int file_desc = open(args[redir_index + 1], 1 | 512 | 64, 0644);
+                if (file_desc == -1) {
+                    printErrorMessage();
+                    exit(EXIT_FAILURE);
+                }
+                dup2(file_desc, STDOUT_FILENO);
+                close(file_desc);
+                args[redir_index] = NULL;
+                args[redir_index + 1] = NULL;
+            }
+
+            if(execvp(final_full_path, args) == -1){
+                printErrorMessage();
+            }
+        }
+        else if (pid < 0)
+        {
             printErrorMessage();
         }
         else
         {
-            pid_t pid;
-            int status;
- 
-            pid = fork();
-            if(pid == 0)
-            {
-                int redir_count = 0;
-                int redir_index = -1;
-                for (int i = 0; args[i] != NULL; i++) {
-                    if (strcmp(args[i], ">") == 0) {
-                        redir_count++;
-                        redir_index = i;
-                        if (redir_count > 1 || args[i+1] == NULL ||args[i+2] != NULL ) {
-                            printErrorMessage();
-                            exit(EXIT_FAILURE);
-                        }
-                    }
-                }
-
-                if (redir_index != -1 && args[redir_index + 1] != NULL) {
-                    int file_desc = open(args[redir_index + 1], 1 | 512 | 64, 0644);
-                    if (file_desc == -1) {
-                        printErrorMessage();
-                        exit(EXIT_FAILURE);
-                    }
-                    dup2(file_desc, STDOUT_FILENO);
-                    close(file_desc);
-                    args[redir_index] = NULL;
-                    args[redir_index + 1] = NULL;
-                }
-
-                if(execvp(args[0], args) == -1){
-                    printErrorMessage();
-                }
-            }
-            else if (pid < 0)
-            {
-                printErrorMessage();
-            }
-            else
-            {
-                wait(&status);
-            }
+            wait(&status);
+            return;
         }
-        free(full_path);
     }
+
+    // for(int j = 0; path[j] != NULL; j++)
+    // {   
+    //     size_t full_path_len = strlen(path[j]) + strlen("/") + strlen(args[0]) + 1;
+    //     char *full_path = (char *)malloc(full_path_len * sizeof(char));
+    //     if (full_path == NULL) {
+    //         printErrorMessage();
+    //         return;
+    //     }
+
+    //     strcpy(full_path, path[j]);
+    //     strcat(full_path, "/");
+    //     strcat(full_path, args[0]);
+    //     int fd = access(full_path, X_OK);
+    //     if (fd == -1) {
+    //         printErrorMessage();
+    //     }
+    //     else
+    //     {
+    //         pid_t pid;
+    //         int status;
+ 
+    //         pid = fork();
+    //         if(pid == 0)
+    //         {
+    //             int redir_count = 0;
+    //             int redir_index = -1;
+    //             for (int i = 0; args[i] != NULL; i++) {
+    //                 if (strcmp(args[i], ">") == 0) {
+    //                     redir_count++;
+    //                     redir_index = i;
+    //                     if (redir_count > 1 || args[i+1] == NULL ||args[i+2] != NULL ) {
+    //                         printErrorMessage();
+    //                         exit(EXIT_FAILURE);
+    //                     }
+    //                 }
+    //             }
+
+    //             if (redir_index != -1 && args[redir_index + 1] != NULL) {
+    //                 int file_desc = open(args[redir_index + 1], 1 | 512 | 64, 0644);
+    //                 if (file_desc == -1) {
+    //                     printErrorMessage();
+    //                     exit(EXIT_FAILURE);
+    //                 }
+    //                 dup2(file_desc, STDOUT_FILENO);
+    //                 close(file_desc);
+    //                 args[redir_index] = NULL;
+    //                 args[redir_index + 1] = NULL;
+    //             }
+
+    //             if(execvp(full_path, args) == -1){
+    //                 printErrorMessage();
+    //             }
+    //         }
+    //         else if (pid < 0)
+    //         {
+    //             printErrorMessage();
+    //         }
+    //         else
+    //         {
+    //             wait(&status);
+    //             return;
+    //         }
+    //     }
+    //     free(full_path);
+    // }
 }
 
 void rushExecuteASDASD(char **args, char **path)
@@ -263,7 +343,8 @@ int main(int argc, char *argv[])
     char **args;
     char *initialPath[2];
     initialPath[0] = strdup("/bin");
-    initialPath[1] = NULL;
+    initialPath[1] = strdup("/usr/bin");
+    initialPath[2] = NULL;
 
     char **path = initialPath;
 
@@ -294,9 +375,10 @@ int main(int argc, char *argv[])
         }else {
             if(path[0] == NULL)
             {
+                printErrorMessage();
                 continue;
             }
-            rushExecuteASDASD(args, path);
+            rushExecute(args, path);
         }
 
         free(input);
