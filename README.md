@@ -1,4 +1,4 @@
-# Rapid Unix SHell (rush) README
+# Rapid Unix SHell (rush)
 
 ## Introduction
 
@@ -55,14 +55,14 @@ The shell prints a single error message `An error has occurred\n` to `stderr` wh
 
 The shell handles various kinds of whitespace, including spaces and tabs, ensuring that commands and arguments are correctly parsed regardless of whitespace variations.
 
-### Miscellaneous Hints
-
-- Implement the shell incrementally, starting with basic functionalities.
-- Test thoroughly with various inputs to ensure robust behavior.
 
 ## Usage
 
-To compile and run the shell:
-```sh
-gcc -o rush rush.c
-./rush
+1. Compile the program:
+    ```
+    make
+    ```
+2. Run the compiled program:
+    ```
+    ./rush
+    ```
